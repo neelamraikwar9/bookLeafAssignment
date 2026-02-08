@@ -4,6 +4,7 @@ const cors = require("cors");
 app.use(express.json());
 app.use(cors());
 
+
 const authorsStorage = new Map();
 const booksStorage = new Map();
 const salesStorage = new Map(); // creating empty in-memory database using Map.
