@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 app.use(express.json());
-app.use(cors()); 
+app.use(cors());
 
 const authorsStorage = new Map();
 const booksStorage = new Map();
@@ -10,8 +10,7 @@ const salesStorage = new Map(); // creating empty in-memory database using Map.
 let withdrawals = [];
 const withdrawalsStorage = new Map();
 
-
-// Seed some data
+// Seeding data
 let authors = [
   {
     authorId: 1,
@@ -94,9 +93,6 @@ let sales = [
 
 sales.map((s) => salesStorage.set(s.saleBookId, s));
 
-// Returns a list of all authors with their calculated total earnings and current balance.
-// Each author should include: id, name, total_earnings, current_balance
-
 //total copies;
 const getTotalCopies = (sale) => {
   let copies1 = sale.copiesNo1 || 0;
@@ -118,9 +114,12 @@ function getAuthorTotalEarnings(authorId) {
   return totalEarnings;
 }
 
+
+// 1. GET /authors
+
 app.get("/authors", (req, res) => {
   const autherWithEarning = authors.map((a) => {
-    const totalEarnings = getAuthorTotalEarnings(a.authorId); // ✅ REUSABLE!
+    const totalEarnings = getAuthorTotalEarnings(a.authorId);
 
     return {
       id: a.authorId,
@@ -133,54 +132,8 @@ app.get("/authors", (req, res) => {
   res.json(autherWithEarning);
 });
 
-// app.get("/authors", (req, res) => {
-//   //total copies;
-
-//   const bookEarning = sales.map((sale) => ({
-//     bookId: sale.saleBookId,
-//     totoalCopies: getTotalCopies(sale), // just calling the function here with am argument;
-//   }));
-//   console.log(bookEarning, "bookEarning");
-
-//   //calculating royality;
-
-//   const booksWithEarning = books.map((book) => {
-//     const sale = bookEarning.find((e) => e.bookId === book.bookId);
-//     console.log(sale, "sale");
-
-//     return {
-//       ...book,
-//       totoalCopies: sale ? sale.totoalCopies : 0,
-//       totalEarnings: (sale ? sale.totoalCopies : 0) * book.royalty,
-//     };
-//   });
-//   console.log(booksWithEarning, "booksWithEarning");
-
-//   // calculating total author's earnings ;
-//   const autherWithEarning = authors.map((a) => {
-//     const authorBooks = booksWithEarning.filter(
-//       (b) => b.authorId === a.authorId,
-//     );
-//     console.log(authorBooks, "authorBooks");
-
-//     const totalEarnings = authorBooks.reduce(
-//       (acc, curr) => acc + curr.totalEarnings,
-//       0,
-//     );
-//     console.log(totalEarnings, "totalEarnings");
-
-//     return {
-//       id: a.authorId,
-//       name: a.name,
-//       total_earnings: totalEarnings,
-//       current_balance: totalEarnings,
-//     };
-//   });
-//   res.json(autherWithEarning);
-// });
 
 //2. GET /authors/{id}
-
 
 app.get("/authors/:id", (req, res) => {
   const authorId = parseInt(req.params.id);
@@ -199,7 +152,7 @@ app.get("/authors/:id", (req, res) => {
   //   adding sales data with books;
   const booksWithSalesData = authorsListBook.map((b) => {
     const sale = sales.find((s) => s.saleBookId === b.bookId);
-    const totalSold = sale ? getTotalCopies(sale) : 0; // Use helper function;
+    const totalSold = sale ? getTotalCopies(sale) : 0;
     console.log(totalSold, "totalSold");
 
     return {
@@ -216,8 +169,6 @@ app.get("/authors/:id", (req, res) => {
     0,
   );
 
-  // STEP 4: Send final response;
-
   res.json({
     id: author.authorId,
     name: author.name,
@@ -229,8 +180,8 @@ app.get("/authors/:id", (req, res) => {
   });
 });
 
-//3. GET /authors/{id}/sales
 
+//3. GET /authors/{id}/sales
 
 app.get("/authors/:id/sales", (req, res) => {
   const authorId = parseInt(req.params.id);
@@ -248,54 +199,23 @@ app.get("/authors/:id/sales", (req, res) => {
   // all sales for an author book;
   const authorSales = [];
 
-  // authorBooks.map((authBook) => {
-  //     const bookSales = sales.filter((s) => s.saleBookId === authBook.bookId);
-  //     console.log(bookSales, "bookSales");
-
-  //     bookSales.map((sale) => {
-  //         // Handling single sale OR split double sales;
-  //         const sale1 = {
-  //             saleBookId: sale.saleBookId,
-  //             book_title: sale.saleBookName,
-  //             quantity: sale.copiesNo1 || 0,
-  //             royalty_earned: books.royalty * sale.copiesNo1,
-  //             sale_date: sale.copiesOn1
-  //         };
-
-  //         const sale2 = {
-  //             saleBookId: sale.saleBookId,
-  //             book_title: sale.saleBookName,
-  //             quantity: sale.copiesNo2 || 0,
-  //             royalty_earned: books.royalty * sale.copiesNo2,
-  //             sale_date: sale.copiesOn2
-  //         };
-
-  //         authorSales.push(sale1);
-  //         if(sale2.quantity > 0){
-  //             authorSales.push(sale2);
-  //         }
-  //     });
-  // });
-
-  // console.log(authorSales, "authorSales");
-
   // Loop each BOOK (source of royalty)
   authorBooks.forEach((book) => {
-    console.log("Current book:", book.royalty); // DEBUG: shows 45, 60, etc.
+    console.log("Current book:", book.royalty);
 
-    // Find sales for THIS book only
+    // Finding sales for book;
     const bookSales = sales.filter((sale) => sale.saleBookId === book.bookId);
 
-    // Loop each SALE (source of copies)
+    // Looping each sale (source of copies)
     bookSales.forEach((sale) => {
-      console.log("Current sale copies:", sale.copiesNo1); // DEBUG: shows 25, 15, etc.
+      console.log("Current sale copies:", sale.copiesNo1);
 
       // Sale 1
       if (sale.copiesNo1 > 0) {
         authorSales.push({
           book_title: sale.saleBookName,
           quantity: sale.copiesNo1,
-          royalty_earned: book.royalty * sale.copiesNo1, // BOOK.royalty × SALE.copies
+          royalty_earned: book.royalty * sale.copiesNo1,
           sale_date: sale.copiesOn1,
         });
       }
@@ -316,9 +236,8 @@ app.get("/authors/:id/sales", (req, res) => {
   authorSales.sort((a, b) => new Date(a.sale_date) - new Date(b.sale_date));
 
   res.json(authorSales);
-
-  // authorSales
 });
+
 
 //4. POST /withdrawals
 
@@ -333,12 +252,12 @@ app.post("/withdrawals", (req, res) => {
     return res.status(400).json({ error: "Valid amount is required" });
   }
 
-const parsedAmount = parseFloat(amount);
+  const parsedAmount = parseFloat(amount);
   if (parsedAmount < 500) {
     return res.status(400).json({ error: "Minimum withdrawal is ₹500" });
   }
 
-  // 2. Find author
+  // Finding author
   const author = authors.find((a) => a.authorId === author_id);
   if (!author) {
     return res.status(404).json({
@@ -349,12 +268,10 @@ const parsedAmount = parseFloat(amount);
   let totalEarning = getAuthorTotalEarnings(author_id);
   console.log(totalEarning, "totalEarning9909909090");
 
-  if (parsedAmount  > totalEarning) {
-    return res
-      .status(400)
-      .json({
-        error: `Balance is not sufficient. Total earnings: ₹${totalEarning}`,
-      });
+  if (parsedAmount > totalEarning) {
+    return res.status(400).json({
+      error: `Balance is not sufficient. Total earnings: ₹${totalEarning}`,
+    });
   }
 
   const newBalance = totalEarning - amount;
@@ -369,55 +286,45 @@ const parsedAmount = parseFloat(amount);
   };
 
   withdrawals.push(withdrawal);
-  withdrawalsStorage.set(withdrawal.id, withdrawal);  // For ID lookup
+  withdrawalsStorage.set(withdrawal.id, withdrawal);
 
-
- console.log("Withdrawal saved:", withdrawal);
-  res.status(201).json({ withdrawal});
+  console.log("Withdrawal saved:", withdrawal);
+  res.status(201).json({ withdrawal });
 });
 
 
-
-
 // 5. GET /authors/{id}/withdrawals
-// Returns all withdrawal requests for an author, sorted by date (newest first). Each should show: id,
-// amount, status, created_at
 
 app.get("/authors/:id/withdrawals", (req, res) => {
-  const authorId = parseInt(req.params.id); 
-  console.log(authorId, "authorId")
+  const authorId = parseInt(req.params.id);
+  console.log(authorId, "authorId");
 
   const author = authors.find((a) => a.authorId === authorId);
-  console.log(author, "author"); 
+  console.log(author, "author");
   if (!author) {
     return res.status(404).json({
       error: "Author not found",
     });
   }
 
-  // filter withdrawals for the author; 
-
+  // filter withdrawals for the author;
   const authorWithdrawals = withdrawals.filter((w) => w.author_id === authorId);
-  console.log(authorWithdrawals, "authorWithdrawals"); 
+  console.log(authorWithdrawals, "authorWithdrawals");
 
   const getWithdrawals = authorWithdrawals.map((w) => ({
-    id: w.id,           
-    amount: w.amount,       
-    status: w.status,       
-    created_at: w.created_at    
-  }))
+    id: w.id,
+    amount: w.amount,
+    status: w.status,
+    created_at: w.created_at,
+  }));
 
-   // 3. Sort by date (newest first)
-    getWithdrawals.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  // Sorting by date (newest first)
+  getWithdrawals.sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+  );
 
-    // 4. Return response
-    res.json(getWithdrawals);
-})
-
-
-
-
-
+  res.json(getWithdrawals);
+});
 
 let PORT = 9000;
 
